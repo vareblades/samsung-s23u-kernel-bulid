@@ -20,11 +20,11 @@ jobs:
 
       - name: Clone Toolchain & Source
         run: |
-          # Клонируем Clang напрямую из официального Proton-Clang (очень стабильный и быстрый)
+          # Клонируем Clang
           git clone --depth=1 https://github.com/kdrag0n/proton-clang.git $GITHUB_WORKSPACE/clang
           
-          # Клонируем исходники ядра S23 Ultra
-          git clone --depth=1 https://github.com/samsung-sm8550/kernel_samsung_sm8550-common.git -b 5.15 $GITHUB_WORKSPACE/kernel
+          # Клонируем исходники ядра S23 Ultra (без привязки к имени ветки)
+          git clone --depth=1 https://github.com/samsung-sm8550/kernel_samsung_sm8550-common.git $GITHUB_WORKSPACE/kernel
 
       - name: Setup KernelSU-Next & SusFS
         run: |
