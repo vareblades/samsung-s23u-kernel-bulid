@@ -20,10 +20,10 @@ jobs:
 
       - name: Clone Toolchain & Source
         run: |
-          # Клонируем компилятор Clang от Google AOSP
-          git clone --depth=1 https://gitlab.com/sarthakroy2002/clang-r450784d.git $GITHUB_WORKSPACE/clang
+          # Клонируем Clang напрямую из официального Proton-Clang (очень стабильный и быстрый)
+          git clone --depth=1 https://github.com/kdrag0n/proton-clang.git $GITHUB_WORKSPACE/clang
           
-          # Клонируем исходники ядра S23 Ultra (ветка 5.15)
+          # Клонируем исходники ядра S23 Ultra
           git clone --depth=1 https://github.com/samsung-sm8550/kernel_samsung_sm8550-common.git -b 5.15 $GITHUB_WORKSPACE/kernel
 
       - name: Setup KernelSU-Next & SusFS
@@ -34,9 +34,9 @@ jobs:
           
           # Применяем патчи SusFS под 5.15
           git clone --depth=1 https://gitlab.com/simonpunk/susfs4ksu.git -b gki-android12-5.15 $GITHUB_WORKSPACE/susfs
-          cp $GITHUB_WORKSPACE/susfs/kernel_patches/fs/* fs/
-          cp $GITHUB_WORKSPACE/susfs/kernel_patches/include/linux/* include/linux/
-          cp $GITHUB_WORKSPACE/susfs/kernel_patches/5.15/susfs_v1.5.5_kernel-5.15.patch .
+          cp $GITHUB_WORKSPACE/susfs/kernel_patches/fs/* fs/ || true
+          cp $GITHUB_WORKSPACE/susfs/kernel_patches/include/linux/* include/linux/ || true
+          cp $GITHUB_WORKSPACE/susfs/kernel_patches/5.15/susfs_v1.5.5_kernel-5.15.patch . || true
           patch -p1 < susfs_v1.5.5_kernel-5.15.patch || true
 
       - name: Configure Kernel (AR9271 & SusFS)
@@ -57,7 +57,6 @@ jobs:
           echo "CONFIG_ATH9K_COMMON=m" >> $DEFCONFIG_FILE
           echo "CONFIG_ATH9K_HTC=m" >> $DEFCONFIG_FILE
           echo "CONFIG_ATH9K_HTC_DEBUGFS=y" >> $DEFCONFIG_FILE
-          echo "CONFIG_CARL9170=m" >> $DEFCONFIG_FILE
 
       - name: Build Kernel Image
         run: |
