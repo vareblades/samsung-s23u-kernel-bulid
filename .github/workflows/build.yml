@@ -21,19 +21,23 @@ jobs:
       - name: Clone Toolchain & Source
         run: |
           # Клонируем Clang
-          git clone --depth=1 https://github.com/kdrag0n/proton-clang.git $GITHUB_WORKSPACE/clang
+          git clone --depth=1 --filter=blob:none https://github.com/kdrag0n/proton-clang.git $GITHUB_WORKSPACE/clang
           
           # Клонируем исходники ядра S23 Ultra
-          git clone --depth=1 https://github.com/samsung-sm8550/kernel_samsung_sm8550-common.git $GITHUB_WORKSPACE/kernel
+          git clone --depth=1 --filter=blob:none https://github.com/samsung-sm8550/kernel_samsung_sm8550-common.git $GITHUB_WORKSPACE/kernel
 
       - name: Setup KernelSU-Next & SusFS
         run: |
           cd $GITHUB_WORKSPACE/kernel
-          # Встраиваем KernelSU-Next через надежный git clone
-          git clone https://github.com/rifs28/KernelSU-Next.git -b next drivers/kernelsu
           
+          # Скачиваем и распаковываем KernelSU-Next через curl и архив (без проблем с git auth)
+          curl -sL https://github.com/rifs28/KernelSU-Next/archive/refs/heads/next.zip -o ksu.zip
+          unzip -q ksu.zip
+          mv KernelSU-Next-next drivers/kernelsu
+          rm ksu.zip
+
           # Применяем патчи SusFS под 5.15
-          git clone --depth=1 https://gitlab.com/simonpunk/susfs4ksu.git -b gki-android12-5.15 $GITHUB_WORKSPACE/susfs
+          git clone --depth=1 --filter=blob:none https://gitlab.com/simonpunk/susfs4ksu.git -b gki-android12-5.15 $GITHUB_WORKSPACE/susfs
           cp $GITHUB_WORKSPACE/susfs/kernel_patches/fs/* fs/ || true
           cp $GITHUB_WORKSPACE/susfs/kernel_patches/include/linux/* include/linux/ || true
           cp $GITHUB_WORKSPACE/susfs/kernel_patches/5.15/susfs_v1.5.5_kernel-5.15.patch . || true
@@ -70,7 +74,7 @@ jobs:
 
       - name: Package to AnyKernel3
         run: |
-          git clone --depth=1 https://github.com/osm0sis/AnyKernel3 $GITHUB_WORKSPACE/AnyKernel3
+          git clone --depth=1 --filter=blob:none https://github.com/osm0sis/AnyKernel3 $GITHUB_WORKSPACE/AnyKernel3
           cp $GITHUB_WORKSPACE/kernel/out/arch/arm64/boot/Image $GITHUB_WORKSPACE/AnyKernel3/
           cd $GITHUB_WORKSPACE/AnyKernel3
           zip -r9 $GITHUB_WORKSPACE/S23U-Kernel-SusFS-AR9271.zip *
