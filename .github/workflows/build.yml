@@ -30,11 +30,8 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE/kernel
           
-          # Скачиваем и распаковываем KernelSU-Next через curl и архив (без проблем с git auth)
-          curl -sL https://github.com/rifs28/KernelSU-Next/archive/refs/heads/next.zip -o ksu.zip
-          unzip -q ksu.zip
-          mv KernelSU-Next-next drivers/kernelsu
-          rm ksu.zip
+          # Официальный установщик KernelSU-Next
+          curl -LSs "https://raw.githubusercontent.com/rifs28/KernelSU-Next/next/kernel/setup.sh" | bash -s next
 
           # Применяем патчи SusFS под 5.15
           git clone --depth=1 --filter=blob:none https://gitlab.com/simonpunk/susfs4ksu.git -b gki-android12-5.15 $GITHUB_WORKSPACE/susfs
