@@ -1,4 +1,4 @@
-name: Build S23 Ultra Kernel with SusFS & AR9271
+name: Build S23U Kernel SusFS AR9271
 
 on:
   workflow_dispatch:
@@ -20,23 +20,16 @@ jobs:
 
       - name: Clone Toolchain & Source
         run: |
-          # Клонируем Clang
           git clone --depth=1 --filter=blob:none https://github.com/kdrag0n/proton-clang.git $GITHUB_WORKSPACE/clang
-          
-          # Клонируем исходники ядра S23 Ultra
           git clone --depth=1 --filter=blob:none https://github.com/samsung-sm8550/kernel_samsung_sm8550-common.git $GITHUB_WORKSPACE/kernel
 
       - name: Setup KernelSU-Next & SusFS
         run: |
           cd $GITHUB_WORKSPACE/kernel
-          
-          # Актуальный официальный скрипт установки KernelSU-Next
           curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -s next
 
-          # Клонируем патчи SusFS
           git clone --depth=1 --filter=blob:none https://gitlab.com/simonpunk/susfs4ksu.git -b gki-android14-5.15 $GITHUB_WORKSPACE/susfs
           
-          # Копируем и применяем патчи
           cp $GITHUB_WORKSPACE/susfs/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch drivers/kernelsu/ || true
           cp $GITHUB_WORKSPACE/susfs/kernel_patches/fs/* fs/ || true
           cp $GITHUB_WORKSPACE/susfs/kernel_patches/include/linux/* include/linux/ || true
@@ -50,17 +43,28 @@ jobs:
             if [ -f "$p" ]; then patch -p1 < "$p" || true; fi
           done
 
-      - name: Configure Kernel (AR9271 & SusFS)
+      - name: Configure Kernel (AR9271 & Full SusFS)
         run: |
           cd $GITHUB_WORKSPACE/kernel
           DEFCONFIG_FILE="arch/arm64/configs/kalama_defconfig"
           
-          # Включаем SusFS & KSU
+          # Базовые флаги KSU и SusFS
           echo "CONFIG_KSU=y" >> $DEFCONFIG_FILE
           echo "CONFIG_KSU_SUSFS=y" >> $DEFCONFIG_FILE
           echo "CONFIG_SUSFS=y" >> $DEFCONFIG_FILE
           
-          # Включаем драйверы для AR9271 (Atheros ath9k_htc)
+          # Полный набор расширенных флагов SusFS со скриншота
+          echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> $DEFCONFIG_FILE
+          echo "CONFIG_KSU_SUSFS_SUS_MAPS=y" >> $DEFCONFIG_FILE
+          echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> $DEFCONFIG_FILE
+          echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> $DEFCONFIG_FILE
+          echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> $DEFCONFIG_FILE
+          echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE=y" >> $DEFCONFIG_FILE
+          echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> $DEFCONFIG_FILE
+          echo "CONFIG_KSU_SUSFS_LOGGING=y" >> $DEFCONFIG_FILE
+          echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> $DEFCONFIG_FILE
+
+          # Драйверы для AR9271 (Atheros ath9k_htc)
           echo "CONFIG_CFG80211=m" >> $DEFCONFIG_FILE
           echo "CONFIG_MAC80211=m" >> $DEFCONFIG_FILE
           echo "CONFIG_ATH_COMMON=m" >> $DEFCONFIG_FILE
@@ -77,7 +81,6 @@ jobs:
           export SUBARCH=arm64
           
           make O=out ARCH=arm64 kalama_defconfig
-          # Добавлен HOSTLD=ld для использования системного линковщика хоста
           make -j$(nproc) O=out ARCH=arm64 CC=clang LLVM=1 LLVM_IAS=1 HOSTCC=gcc HOSTCXX=g++ HOSTLD=ld Image
 
       - name: Package to AnyKernel3
@@ -90,9 +93,8 @@ jobs:
       - name: Upload Release
         uses: softprops/action-gh-release@v1
         with:
-      tag_name: "v${{ github.run_number }}"
+          tag_name: "v${{ github.run_number }}"
           name: "S23 Ultra Kernel (SusFS + AR9271) #${{ github.run_number }}"
-          files: |
-            S23U-Kernel-SusFS-AR9271.zip
+          files: S23U-Kernel-SusFS-AR9271.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
