@@ -77,7 +77,8 @@ jobs:
           export SUBARCH=arm64
           
           make O=out ARCH=arm64 kalama_defconfig
-          make -j$(nproc) O=out ARCH=arm64 CC=clang LLVM=1 LLVM_IAS=1 Image
+          # Добавлены HOSTCC=gcc и HOSTCXX=g++ для сборки хост-утилит через системный компилятор
+          make -j$(nproc) O=out ARCH=arm64 CC=clang LLVM=1 LLVM_IAS=1 HOSTCC=gcc HOSTCXX=g++ Image
 
       - name: Package to AnyKernel3
         run: |
