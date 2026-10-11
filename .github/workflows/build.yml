@@ -77,8 +77,8 @@ jobs:
           export SUBARCH=arm64
           
           make O=out ARCH=arm64 kalama_defconfig
-          # Добавлены HOSTCC=gcc и HOSTCXX=g++ для сборки хост-утилит через системный компилятор
-          make -j$(nproc) O=out ARCH=arm64 CC=clang LLVM=1 LLVM_IAS=1 HOSTCC=gcc HOSTCXX=g++ Image
+          # Добавлен HOSTLD=ld для использования системного линковщика хоста
+          make -j$(nproc) O=out ARCH=arm64 CC=clang LLVM=1 LLVM_IAS=1 HOSTCC=gcc HOSTCXX=g++ HOSTLD=ld Image
 
       - name: Package to AnyKernel3
         run: |
@@ -90,7 +90,7 @@ jobs:
       - name: Upload Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: "v${{ github.run_number }}"
+      tag_name: "v${{ github.run_number }}"
           name: "S23 Ultra Kernel (SusFS + AR9271) #${{ github.run_number }}"
           files: |
             S23U-Kernel-SusFS-AR9271.zip
